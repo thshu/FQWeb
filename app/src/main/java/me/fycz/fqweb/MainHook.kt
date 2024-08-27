@@ -55,14 +55,17 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
 
     private lateinit var modulePath: String
 
+    // 在Zygote进程启动时调用，用于初始化模块
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
         modulePath = startupParam.modulePath
     }
 
+    // 在加载资源时调用，用于初始化模块资源
     override fun handleInitPackageResources(resParam: XC_InitPackageResources.InitPackageResourcesParam) {
         moduleRes = XModuleResources.createInstance(modulePath, resParam.res)
     }
 
+    // 在加载包时调用，用于处理包的加载
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName == "com.dragon.read") {
             GlobalApp.initClassLoader(lpparam.classLoader)
@@ -90,6 +93,7 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
         }
     }
 
+    // 获取当前进程名称
     private fun getProcessName(context: Context): String {
         return try {
             for (runningAppProcessInfo in (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).runningAppProcesses) {
@@ -103,6 +107,7 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
         }
     }
 
+    // 钩子设置
     private fun hookSetting(classLoader: ClassLoader) {
         var adapter: Any? = null
         "com.dragon.read.component.biz.impl.mine.settings.SettingsActivity"
@@ -164,6 +169,7 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
             }
     }
 
+    // 弹出设置对话框
     @SuppressLint("SetTextI18n")
     fun dialog(context: Context, adapter: Any?, settingView: Any) {
         val textColor = Color.parseColor("#060606")
@@ -349,6 +355,7 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
             }.create().show()
     }
 
+    // 重启服务
     private fun restartServe(port: Int = SPUtils.getInt("port", 9999)) {
         if (httpServer.isAlive) {
             if (httpServer.listeningPort != port) {
@@ -362,11 +369,13 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitP
         }
     }
 
+    // dp转px
     private fun dp2px(context: Context, dipValue: Float): Int {
         val scale = context.resources.displayMetrics.density
         return (dipValue * scale + 0.5f).toInt()
     }
 
+    // 钩子更新
     private fun hookUpdate(classLoader: ClassLoader) {
         val unhook = "com.dragon.read.update.d".replaceMethod(
             classLoader,
